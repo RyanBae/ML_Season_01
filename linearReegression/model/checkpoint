@@ -1,0 +1,2 @@
+model_checkpoint_path: "ryan_ml_model_01"
+all_model_checkpoint_paths: "ryan_ml_model_01"
