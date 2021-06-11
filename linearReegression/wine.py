@@ -1,20 +1,3 @@
-
-###################################
-# Wine Quality Model
-# fixed acidity : 고정 산도
-# volatile acidity : 휘발성 산도 *
-# citric acid : 시트르산 *
-# residual sugar : 잔류 설탕
-# chlorides : 염화물 *
-# free sulfur dioxide : 자유 이산화황
-# total sulfur dioxide : 총 이산화황
-# density : 밀도
-# pH : pH
-# sulphates : 황산염 *
-# alcohol : 알코올 *
-# quality : 품질   # 종속변수
-###################################
-
 import os
 import pandas as pd
 import numpy as np
@@ -24,110 +7,121 @@ import matplotlib.pyplot as plt
 import tensorflow.compat.v1 as tf
 tf.disable_v2_behavior()
 
-wine = pd.read_csv("./csv/winequality-white.csv", delimiter=';', dtype=float)
-# wn = np.loadtxt("./csv/winequality-red.csv", delimiter=';', skiprows=1)
+wine = pd.read_csv("./csv/winequality-red.csv", delimiter=';', dtype=float)
 
+print(wine.shape)
+print(wine.head())
 print(wine.info())
 print(wine.describe())
-# print(wine['quality'].describe())
 
-# wine.hist(bins=25, figsize=(10, 10))
-
-# #######
-print(wine.shape)
-# plt.hist(wine['quality'], bins=7, rwidth=0.7)
-# plt.show()
-print(wine.head())
-# 정규화
-
-wine_quality = wine['quality']
-print(wine_quality)
-wine_norm = (wine - wine.min()) / (wine.max() - wine.min())
-# wine_norm = wine
-print(wine_norm)
+# X, Y 분리
+wine_copy = wine.copy()
+# wine_copy = (wine_copy - wine_copy.min()) / (wine_copy.max() - wine_copy.min())
+_X = wine_copy.drop(labels=['quality'], axis=1).values
+_Y = wine_copy.quality.values
 
 
-# 데이터 섞은 후 numpy array 로 변환
-# wine_shuffle = wine_norm.sample(frac=1)
-wine_np = wine_norm.to_numpy()
-wine_y = wine_quality.to_numpy()
-print(wine_y)
-print("??")
-wine_y = wine_y[:, np.newaxis]
-print(wine_y)
+# 트레인, 테스트 셋 나누기
+# train_idx = int(len(_X) * 0.7)
+train_index = np.random.choice(len(_X), round(len(_X) * 0.8), replace=False)
+test_index = np.array(list(set(range(len(_X))) - set(train_index)))
+train_X = _X[train_index]
+train_Y = _Y[train_index]
+test_X = _X[test_index]
+test_Y = _Y[test_index]
+# train_X, train_Y = X[:train_idx, :-1], Y[:train_idx, -1]
+# train_X, train_Y = _X[:train_idx], _Y[:train_idx]
+# test_X, test_Y = X[train_idx:, :-1], Y[train_idx:, -1]
+# test_X, test_Y = _X[train_idx:], _Y[train_idx:]
 
-# 트레인, 테스트 셋 분할 하기
-train_idx = int(len(wine_np) * 0.7)
-train_X, train_Y = wine_np[:train_idx, :-1], wine_y[:train_idx, -1]
-test_X, test_Y = wine_np[train_idx:, :-1], wine_y[train_idx:, -1]
-# print(train_Y.shape)
-print("======")
-# train_Y = np.expand_dims(train_Y, axis=0)
-# test_Y = np.expand_dims(test_Y, axis=0)
 train_Y = train_Y[:, np.newaxis]
-test_Y = train_Y[:, np.newaxis]
-# print(train_Y.shape)
-print(train_X[:5, :])
+test_Y = test_Y[:, np.newaxis]
+
+print("==== ")
+
+
+# 노멀라이즈드
+
+
+def min_max_normalized(data):
+    col_max = np.max(data, axis=0)
+    col_min = np.min(data, axis=0)
+    return np.divide(data - col_min, col_max - col_min)
+
+
+train_X = min_max_normalized(train_X)
+test_X = min_max_normalized(test_X)
+# print(train_X[:5, :])
+print("==== train X")
+print(train_X)
+print("==== train Y")
+print(train_Y)
+print("==== test X")
+print(test_X[:1])
+print("==== test Y")
+print(test_Y)
 
 X = tf.placeholder(tf.float32, shape=[None, 11])
 Y = tf.placeholder(tf.float32, shape=[None, 1])
-
 W = tf.Variable(tf.random_normal([11, 1]), name='weight')
 b = tf.Variable(tf.random_normal([1, 1]), name='bias')
 
-learning_rate = 0.001
 
-# Hypothesis
 hypothesis = tf.matmul(X, W)+b
-# simplified cost / loss function
-cost = tf.reduce_mean(tf.nn.sigmoid_cross_entropy_with_logits(
-    logits=hypothesis, labels=Y))
+cost = tf.reduce_mean(tf.square(hypothesis - Y))
 
-# Minimize
-optimizer = tf.train.GradientDescentOptimizer(learning_rate=learning_rate)
+learning_rate = 0.001
+optimizer = tf.train.GradientDescentOptimizer(
+    learning_rate=learning_rate).minimize(cost)
 
-train = optimizer.minimize(cost)
-
-# Correct prediction Test model
-prediction = tf.round(tf.sigmoid(hypothesis))
+# prediction 정할때 0, 1 에서 찾는게 아니라면 tf.sigmoid 는 사용하지 않도록 한다!
+prediction = tf.round(hypothesis)
 is_correct = tf.cast(tf.equal(prediction, Y), dtype=tf.float32)
 accuracy = tf.reduce_mean(is_correct)
 
-# with tf.Session() as sess:
-#     sess.run(tf.global_variables_initializer())
 
-#     # for epoch in range(training_epochs):
-#     #     avg_cost = 0
-#     #     total_batch = int(wine.train.num_examples / batch_size)
-#     #     for i in range(total_batch):
-#     #         batch_xs, batch_ys =
+# Start training model
 
-#     for step in range(2000):
-#         cost_val, W_wal, _ = sess.run([cost, W, train], feed_dict={
-#                                       X: train_X, Y: train_Y})
+loss_trace = []
+train_acc = []
+test_acc = []
 
-#         print("| Step : ", step, "\n| Cost : ", cost_val,
-#               "\n| Prediction : ", W_wal, "  | ", _)
-#         # print("Acc : "+sess.run(accuracy, feed_dict={X: train_X}))
+sess = tf.Session()
+sess.run(tf.global_variables_initializer())
+for step in range(100000):
+    cost_val, hy_val, _ = sess.run([cost, hypothesis, optimizer], feed_dict={
+        X: train_X, Y: train_Y})
+    acc, acc_val, _ = sess.run([accuracy, hypothesis, optimizer],
+                               feed_dict={X: test_X, Y: test_Y})
+    train_acc_val = sess.run([accuracy], feed_dict={X: train_X, Y: train_Y})
+    text_acc_val = sess.run([accuracy], feed_dict={X: test_X, Y: test_Y})
+    if step % 10000 == 0:
+        print("\n Step : ", step, "\n Cost : ",
+              cost_val, "\n Prediction : ", hy_val)
+        print(" Acc ", acc, " Acc Val : ", acc_val[:5])
+        print(test_Y[:5])
+    loss_trace.append(cost_val)
+    train_acc.append(train_acc_val)
+    test_acc.append(text_acc_val)
 
-#     # print("Prediction : ", sess.run(
-#         # prediction, feed_dict={X: test_X, Y: test_Y}))
-#     print("Accuracy : ", sess.run(accuracy, feed_dict={X: test_X}))
-#     # print("Accuracy : ", accuracy.eval(session=sess, feed_dict={X: test_X}))
+
+# Visualization of the results
+# loss function
+plt.plot(loss_trace)
+plt.title('Cross Entropy Loss')
+plt.xlabel('Step')
+plt.ylabel('loss')
+plt.show()
+
+plt.plot(train_acc, 'b-', label='train accuracy')
+plt.plot(test_acc, 'k-', label='test accuracy')
+plt.xlabel('epoch')
+plt.ylabel('accuracy')
+plt.title('Train and Test Accuracy')
+plt.legend(loc='best')
+
+plt.show()
 
 
-# sess = tf.Session()
-# sess.run(tf.global_variables_initializer())
-
-# for step in range(1000):
-#     # print(train_X[step])
-#     cost_val, hy_val, _ = sess.run([cost, hypothesis, train], feed_dict={
-#                                    X: train_X, Y: train_Y})
-#     if step % 10 == 0:
-#         print("Step : ", step, " | Cost : ", cost_val,
-#               "\n    | Prediction : ", hy_val)
-# #         # print("")
-
-# print(wn.shape)
-# print(wn[:100, -1])
-# print(wine[:100, -1])
+save = tf.train.Saver()
+save.save(sess, 'model/ryan_ml_model_01')
