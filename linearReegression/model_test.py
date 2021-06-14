@@ -40,8 +40,7 @@ hypothesis = tf.matmul(X, W)+b
 cost = tf.reduce_mean(tf.square(hypothesis - Y))
 
 learning_rate = 0.001
-optimizer = tf.train.GradientDescentOptimizer(
-    learning_rate=learning_rate).minimize(cost)
+optimizer = tf.train.GradientDescentOptimizer(learning_rate=learning_rate).minimize(cost)
 
 prediction = tf.round(hypothesis)
 is_correct = tf.cast(tf.equal(prediction, Y), dtype=tf.float32)
@@ -54,8 +53,7 @@ saver = tf.train.Saver()
 sess.run(tf.global_variables_initializer())
 saver.restore(sess, './model/ryan_ml_model_01')
 
-dict_input = np.array([[0.60550459, 0.13186813, 0.77777778, 0.09090909, 0.09534884, 0.25925926,
-                        0.37588652, 0.55411255, 0.25438596, 0.15432099, 0.25]])
+dict_input = np.array([[0.60550459, 0.13186813, 0.77777778, 0.09090909, 0.09534884, 0.25925926, 0.37588652, 0.55411255, 0.25438596, 0.15432099, 0.25]])
 
 print("모델의 Accuracy : ", sess.run(accuracy, feed_dict={X: test_X, Y: test_Y}))
 print("저장한 값으로 예측.")

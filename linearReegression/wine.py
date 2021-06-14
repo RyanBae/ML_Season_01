@@ -41,8 +41,6 @@ print("==== ")
 
 
 # 노멀라이즈드
-
-
 def min_max_normalized(data):
     col_max = np.max(data, axis=0)
     col_min = np.min(data, axis=0)
@@ -89,17 +87,16 @@ test_acc = []
 sess = tf.Session()
 sess.run(tf.global_variables_initializer())
 for step in range(100000):
-    cost_val, hy_val, _ = sess.run([cost, hypothesis, optimizer], feed_dict={
-        X: train_X, Y: train_Y})
-    acc, acc_val, _ = sess.run([accuracy, hypothesis, optimizer],
-                               feed_dict={X: test_X, Y: test_Y})
+    cost_val, hy_val, _ = sess.run([cost, hypothesis, optimizer], feed_dict={X: train_X, Y: train_Y})
+    acc, acc_val, _ = sess.run([accuracy, hypothesis, optimizer], feed_dict={X: test_X, Y: test_Y})
     train_acc_val = sess.run([accuracy], feed_dict={X: train_X, Y: train_Y})
     text_acc_val = sess.run([accuracy], feed_dict={X: test_X, Y: test_Y})
+
     if step % 10000 == 0:
-        print("\n Step : ", step, "\n Cost : ",
-              cost_val, "\n Prediction : ", hy_val)
+        print("\n Step : ", step, "\n Cost : ", cost_val, "\n Prediction : ", hy_val)
         print(" Acc ", acc, " Acc Val : ", acc_val[:5])
         print(test_Y[:5])
+
     loss_trace.append(cost_val)
     train_acc.append(train_acc_val)
     test_acc.append(text_acc_val)
