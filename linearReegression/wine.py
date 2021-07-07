@@ -72,6 +72,7 @@ learning_rate = 0.001
 optimizer = tf.train.GradientDescentOptimizer(
     learning_rate=learning_rate).minimize(cost)
 
+
 # prediction 정할때 0, 1 에서 찾는게 아니라면 tf.sigmoid 는 사용하지 않도록 한다!
 prediction = tf.round(hypothesis)
 is_correct = tf.cast(tf.equal(prediction, Y), dtype=tf.float32)
