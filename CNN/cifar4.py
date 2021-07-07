@@ -15,6 +15,7 @@ from tensorflow.python.keras.layers.normalization import BatchNormalization
 # 트랜스퍼러닝 해보기. 
 # vgg16 해보기.
 
+
 cifar10 = datasets.cifar10 
 (train_images, train_labels), (test_images, test_labels) = cifar10.load_data()
  
