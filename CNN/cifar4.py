@@ -103,7 +103,7 @@ model = models.Sequential()
 # 1
 # ###############################################
 
-# 특징을 32개 뽑을건데 그 특징이 3*3의 특징으로 할거다.
+# 특징을 32개 뽑을건데 그 특징이 3*3의 필터로 할거다.
 model.add(layers.Conv2D(32, (3, 3), activation='relu', padding='same', input_shape=(32, 32, 3)))
 model.add(BatchNormalization())
 
@@ -134,7 +134,7 @@ model.compile(optimizer=opt, loss='sparse_categorical_crossentropy', metrics=['a
 
 model.summary()
 
-checkpointer = ModelCheckpoint(filepath='aug_model.weights.best.hdf5', verbose=1, save_best_only=True)
+checkpointer = ModelCheckpoint(filepath='aug_model.weights.best.transfer.hdf5', verbose=1, save_best_only=True)
 
 # tensorBoard callback 
 logdir="logs/" + datetime.now().strftime("%Y%m%d-%H%M%S")
